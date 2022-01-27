@@ -18,7 +18,7 @@ if(NOT DEFINED LLVM_VERSION_MINOR)
   set(LLVM_VERSION_MINOR 0)
 endif()
 if(NOT DEFINED LLVM_VERSION_PATCH)
-  set(LLVM_VERSION_PATCH 0)
+  set(LLVM_VERSION_PATCH 1)
 endif()
 if(NOT DEFINED LLVM_VERSION_SUFFIX)
   set(LLVM_VERSION_SUFFIX "")
@@ -794,8 +794,9 @@ endif()
 # was created) and can fail since it is not the dynamic linker and
 # doesn't know how to handle search paths correctly.
 if (UNIX AND NOT APPLE AND NOT ${CMAKE_SYSTEM_NAME} MATCHES "SunOS|AIX")
-  set(CMAKE_EXE_LINKER_FLAGS
-      "${CMAKE_EXE_LINKER_FLAGS} -Wl,-allow-shlib-undefined")
+# NOTE(BINJI_HACK): doesn't work with wasm-ld
+#   set(CMAKE_EXE_LINKER_FLAGS
+#       "${CMAKE_EXE_LINKER_FLAGS} -Wl,-allow-shlib-undefined")
 endif()
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
