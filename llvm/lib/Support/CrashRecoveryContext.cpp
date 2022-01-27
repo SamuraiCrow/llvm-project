@@ -13,9 +13,7 @@
 #include "llvm/Support/ManagedStatic.h"
 #include "llvm/Support/Mutex.h"
 #include "llvm/Support/ThreadLocal.h"
-#ifndef BINJI_HACK
 #include <setjmp.h>
-#endif
 using namespace llvm;
 
 namespace {
@@ -33,9 +31,7 @@ struct CrashRecoveryContextImpl {
   const CrashRecoveryContextImpl *Next;
 
   CrashRecoveryContext *CRC;
-#ifndef BINJI_HACK
   ::jmp_buf JumpBuffer;
-#endif
   volatile unsigned Failed : 1;
   unsigned SwitchedThread : 1;
 
@@ -70,11 +66,7 @@ public:
     // FIXME: Stash the backtrace.
 
     // Jump back to the RunSafely we were called under.
-#ifndef BINJI_HACK
     longjmp(JumpBuffer, 1);
-#else
-    abort();
-#endif
   }
 };
 
@@ -322,20 +314,17 @@ static void CrashRecoverySignalHandler(int Signal) {
     return;
   }
 
-#ifndef BINJI_HACK
   // Unblock the signal we received.
   sigset_t SigMask;
   sigemptyset(&SigMask);
   sigaddset(&SigMask, Signal);
   sigprocmask(SIG_UNBLOCK, &SigMask, nullptr);
-#endif
 
   if (CRCI)
     const_cast<CrashRecoveryContextImpl*>(CRCI)->HandleCrash();
 }
 
 static void installExceptionOrSignalHandlers() {
-#ifndef BINJI_HACK
   // Setup the signal handler.
   struct sigaction Handler;
   Handler.sa_handler = CrashRecoverySignalHandler;
@@ -345,22 +334,18 @@ static void installExceptionOrSignalHandlers() {
   for (unsigned i = 0; i != NumSignals; ++i) {
     sigaction(Signals[i], &Handler, &PrevActions[i]);
   }
-#endif
 }
 
 static void uninstallExceptionOrSignalHandlers() {
-#ifndef BINJI_HACK
   // Restore the previous signal handlers.
   for (unsigned i = 0; i != NumSignals; ++i)
     sigaction(Signals[i], &PrevActions[i], nullptr);
-#endif
 }
 
 #endif // !_WIN32
 
 bool CrashRecoveryContext::RunSafely(function_ref<void()> Fn) {
   // If crash recovery is disabled, do nothing.
-#ifndef BINJI_HACK
   if (gCrashRecoveryEnabled) {
     assert(!Impl && "Crash recovery context already initialized!");
     CrashRecoveryContextImpl *CRCI = new CrashRecoveryContextImpl(this);
@@ -370,7 +355,6 @@ bool CrashRecoveryContext::RunSafely(function_ref<void()> Fn) {
       return false;
     }
   }
-#endif
 
   Fn();
   return true;

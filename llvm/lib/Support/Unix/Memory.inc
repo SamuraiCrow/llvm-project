@@ -46,7 +46,6 @@ extern "C" void __clear_cache(void *, void*);
 namespace {
 
 int getPosixProtectionFlags(unsigned Flags) {
-#ifndef BINJI_HACK
   switch (Flags) {
   case llvm::sys::Memory::MF_READ:
     return PROT_READ;
@@ -77,10 +76,6 @@ int getPosixProtectionFlags(unsigned Flags) {
   }
   // Provide a default return value as required by some compilers.
   return PROT_NONE;
-
-#else
-  return 0;
-#endif
 }
 
 } // anonymous namespace
@@ -97,7 +92,6 @@ Memory::allocateMappedMemory(size_t NumBytes,
   if (NumBytes == 0)
     return MemoryBlock();
 
-#ifndef BINJI_HACK
   static const size_t PageSize = Process::getPageSize();
   const size_t NumPages = (NumBytes+PageSize-1)/PageSize;
 
@@ -145,13 +139,6 @@ Memory::allocateMappedMemory(size_t NumBytes,
   }
 
   return Result;
-
-#else
-  MemoryBlock Result;
-  Result.Address = ::malloc(NumBytes);
-  Result.Size = NumBytes;
-  return Result;
-#endif
 }
 
 std::error_code
@@ -159,12 +146,8 @@ Memory::releaseMappedMemory(MemoryBlock &M) {
   if (M.Address == nullptr || M.Size == 0)
     return std::error_code();
 
-#ifndef BINJI_HACK
   if (0 != ::munmap(M.Address, M.Size))
     return std::error_code(errno, std::generic_category());
-#else
-  ::free(M.Address);
-#endif
 
   M.Address = nullptr;
   M.Size = 0;
@@ -187,7 +170,6 @@ Memory::protectMappedMemory(const MemoryBlock &M, unsigned Flags) {
 
   bool InvalidateCache = (Flags & MF_EXEC);
 
-#ifndef BINJI_HACK
 #if defined(__arm__) || defined(__aarch64__)
   // Certain ARM implementations treat icache clear instruction as a memory read,
   // and CPU segfaults on trying to clear cache on !PROT_READ page.  Therefore we need
@@ -203,9 +185,6 @@ Memory::protectMappedMemory(const MemoryBlock &M, unsigned Flags) {
 #endif
 
   int Result = ::mprotect((void *)Start, End - Start, Protect);
-#else
-  int Result = -1;
-#endif
 
   if (Result != 0)
     return std::error_code(errno, std::generic_category());

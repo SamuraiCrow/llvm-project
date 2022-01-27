@@ -794,9 +794,8 @@ endif()
 # was created) and can fail since it is not the dynamic linker and
 # doesn't know how to handle search paths correctly.
 if (UNIX AND NOT APPLE AND NOT ${CMAKE_SYSTEM_NAME} MATCHES "SunOS|AIX")
-# NOTE(BINJI_HACK): doesn't work with wasm-ld
-#   set(CMAKE_EXE_LINKER_FLAGS
-#       "${CMAKE_EXE_LINKER_FLAGS} -Wl,-allow-shlib-undefined")
+  set(CMAKE_EXE_LINKER_FLAGS
+      "${CMAKE_EXE_LINKER_FLAGS} -Wl,-allow-shlib-undefined")
 endif()
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
