@@ -95,7 +95,6 @@ ErrorOr<std::string> sys::findProgramByName(StringRef Name,
 }
 
 static bool RedirectIO(Optional<StringRef> Path, int FD, std::string* ErrMsg) {
-#ifndef BINJI_HACK
   if (!Path) // Noop
     return false;
   std::string File;
@@ -121,9 +120,6 @@ static bool RedirectIO(Optional<StringRef> Path, int FD, std::string* ErrMsg) {
   }
   close(InFD);      // Close the original FD
   return false;
-#else
-  return true;
-#endif
 }
 
 #ifdef HAVE_POSIX_SPAWN
@@ -182,7 +178,6 @@ static bool Execute(ProcessInfo &PI, StringRef Program,
                     ArrayRef<StringRef> Args, Optional<ArrayRef<StringRef>> Env,
                     ArrayRef<Optional<StringRef>> Redirects,
                     unsigned MemoryLimit, std::string *ErrMsg) {
-#ifndef BINJI_HACK
   if (!llvm::sys::fs::exists(Program)) {
     if (ErrMsg)
       *ErrMsg = std::string("Executable \"") + Program.str() +
@@ -330,16 +325,12 @@ static bool Execute(ProcessInfo &PI, StringRef Program,
   PI.Process = child;
 
   return true;
-#else
-  return false;
-#endif
 }
 
 namespace llvm {
 
 ProcessInfo sys::Wait(const ProcessInfo &PI, unsigned SecondsToWait,
                       bool WaitUntilTerminates, std::string *ErrMsg) {
-#ifndef BINJI_HACK
   struct sigaction Act, Old;
   assert(PI.Pid && "invalid pid to wait on, process not started?");
 
@@ -434,12 +425,6 @@ ProcessInfo sys::Wait(const ProcessInfo &PI, unsigned SecondsToWait,
     WaitResult.ReturnCode = -2;
   }
   return WaitResult;
-#else
-  ProcessInfo WaitResult;
-  WaitResult.Pid = 12345;
-  WaitResult.ReturnCode = -1;
-  return WaitResult;
-#endif
 }
 
 std::error_code sys::ChangeStdinToBinary() {
