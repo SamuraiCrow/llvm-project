@@ -7,9 +7,10 @@ INCLUDE(CheckLibraryExists)
 # the platform doesn't support lock-free atomics.
 
 function(check_working_cxx_atomics varname)
-  set(OLD_CMAKE_REQUIRED_FLAGS ${CMAKE_REQUIRED_FLAGS})
-  set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} -std=c++11")
-  CHECK_CXX_SOURCE_COMPILES("
+  if (CMAKE_HAS_ATOMICS())
+    set(OLD_CMAKE_REQUIRED_FLAGS ${CMAKE_REQUIRED_FLAGS})
+    set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} -std=c++11")
+    CHECK_CXX_SOURCE_COMPILES("
 #include <atomic>
 std::atomic<int> x;
 std::atomic<short> y;
@@ -20,13 +21,17 @@ int main() {
   return ++x;
 }
 " ${varname})
-  set(CMAKE_REQUIRED_FLAGS ${OLD_CMAKE_REQUIRED_FLAGS})
+    set(CMAKE_REQUIRED_FLAGS ${OLD_CMAKE_REQUIRED_FLAGS})
+  else()
+    set(${varname} false) 
+  endif()
 endfunction(check_working_cxx_atomics)
 
 function(check_working_cxx_atomics64 varname)
-  set(OLD_CMAKE_REQUIRED_FLAGS ${CMAKE_REQUIRED_FLAGS})
-  set(CMAKE_REQUIRED_FLAGS "-std=c++11 ${CMAKE_REQUIRED_FLAGS}")
-  CHECK_CXX_SOURCE_COMPILES("
+  if (CMAKE_HAS_ATOMICS())
+    set(OLD_CMAKE_REQUIRED_FLAGS ${CMAKE_REQUIRED_FLAGS})
+    set(CMAKE_REQUIRED_FLAGS "-std=c++11 ${CMAKE_REQUIRED_FLAGS}")
+    CHECK_CXX_SOURCE_COMPILES("
 #include <atomic>
 #include <cstdint>
 std::atomic<uint64_t> x (0);
@@ -36,7 +41,10 @@ int main() {
   return 0;
 }
 " ${varname})
-  set(CMAKE_REQUIRED_FLAGS ${OLD_CMAKE_REQUIRED_FLAGS})
+    set(CMAKE_REQUIRED_FLAGS ${OLD_CMAKE_REQUIRED_FLAGS})
+  else()
+    set (${varname} false)
+  endif()
 endfunction(check_working_cxx_atomics64)
 
 
