@@ -363,8 +363,8 @@ option(LLVM_ENABLE_LIBEDIT "Use libedit if available." ON)
 
 option(LLVM_ENABLE_LIBPFM "Use libpfm for performance counters if available." ON)
 
-# On z/OS, threads cannot be used because TLS is not supported.
-if (CMAKE_SYSTEM_NAME MATCHES "OS390")
+# On z/OS and WASI, threads cannot be used because TLS is not supported.
+if (CMAKE_SYSTEM_NAME MATCHES "OS390" OR CMAKE_SYSTEM_NAME MATCHES "WASI")
   option(LLVM_ENABLE_THREADS "Use threads if available." OFF)
 else()
   option(LLVM_ENABLE_THREADS "Use threads if available." ON)
